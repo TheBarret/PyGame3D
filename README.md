@@ -22,7 +22,7 @@ DeepSeek served as the orchestrator, maintaining the project vision, coordinatin
  
 This multi model approach combined Qwen's mathematical depth with Claude's architectural clarity, guided by DeepSeek's project management, resulting in a cohesive extension that would have been difficult for any single model to produce alone. 
  
-# Core features
+# Core features & Goals
 - 3D wireframe rendering using only line drawing primitives
 - Proper perspective projection with homogeneous coordinates
 - Smooth camera controls (orbit, pan, zoom) without gimbal lock
