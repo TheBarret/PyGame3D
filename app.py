@@ -80,7 +80,6 @@ def main() -> None:
 
     # Runtime state
     cube_angle  = 0.0
-    fog_enabled = False
     running     = True
 
     while running:
@@ -147,4 +146,5 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+
     main()
