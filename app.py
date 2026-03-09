@@ -48,7 +48,7 @@ def create_anchor(length, color):
 # HUD
 # ---------------------------------------------------------------------------
 
-def draw_hud(bundle, fog_enabled: bool) -> None:
+def draw_hud(bundle) -> None:
     cfg   = bundle.cfg
     stats = bundle.scene.stats
 
@@ -99,9 +99,6 @@ def main() -> None:
                     bundle.reset_camera()
                 elif event.key == pygame.K_a:
                     bundle.toggle_antialiasing()
-                elif event.key == pygame.K_f:
-                    fog_enabled = not fog_enabled
-                    bundle.toggle_fog(fog_enabled)
 
             elif event.type == pygame.KEYUP:
                 bundle.handler.handle_event(event)
@@ -138,7 +135,7 @@ def main() -> None:
 
         # ── 3. Render ────────────────────────────────────────────────
         bundle.scene.render(bundle.screen)
-        draw_hud(bundle, fog_enabled)
+        draw_hud(bundle)
         pygame.display.flip()
 
     pygame.quit()
@@ -146,5 +143,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-
     main()
