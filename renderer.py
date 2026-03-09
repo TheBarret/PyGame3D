@@ -40,12 +40,6 @@ class WireframeRenderer:
         Use pygame.draw.aaline instead of draw.line.  Slower but smoother.
     depth_sort : bool
         Sort edges back-to-front before drawing (painter's algorithm).
-    fog_color : tuple[int,int,int] | None
-        Target colour for distance fog.  None = disabled.
-    fog_near : float
-        NDC Z where fog starts (0 = near plane).
-    fog_far : float
-        NDC Z where fog is full (1 = far plane).
     """
 
     def __init__(
@@ -54,17 +48,11 @@ class WireframeRenderer:
         screen_height: int = 600,
         antialiased:   bool = False,
         depth_sort:    bool = False,
-        fog_color:     Optional[tuple[int, int, int]] = None,
-        fog_near:      float = 0.5,
-        fog_far:       float = 1.0,
     ) -> None:
         self.screen_width  = screen_width
         self.screen_height = screen_height
         self.antialiased   = antialiased
         self.depth_sort    = depth_sort
-        self.fog_color     = fog_color
-        self.fog_near      = fog_near
-        self.fog_far       = fog_far
 
     # ------------------------------------------------------------------
     # Lifecycle
@@ -143,21 +131,21 @@ class WireframeRenderer:
             # Screen mapping (Y-flip happens inside ndc_to_screen)
             sx_a, sy_a = ndc_to_screen(ndc_a, w, h)
             sx_b, sy_b = ndc_to_screen(ndc_b, w, h)
-
-            # Fog tint (optional)
             edge_color = color
-            if self.fog_color is not None:
-                mid_z     = (ndc_a[2] + ndc_b[2]) * 0.5
-                fog_t     = np.clip(
-                    (mid_z - self.fog_near) / max(self.fog_far - self.fog_near, 1e-6),
-                    0.0, 1.0,
-                )
-                fc        = self.fog_color
-                edge_color = (
-                    int(color[0] * (1 - fog_t) + fc[0] * fog_t),
-                    int(color[1] * (1 - fog_t) + fc[1] * fog_t),
-                    int(color[2] * (1 - fog_t) + fc[2] * fog_t),
-                )
+            
+            # Fog tint
+            #if self.fog_color is not None:
+            #    mid_z     = (ndc_a[2] + ndc_b[2]) * 0.5
+            #    fog_t     = np.clip(
+            #        (mid_z - self.fog_near) / max(self.fog_far - self.fog_near, 1e-6),
+            #        0.0, 1.0,
+            #    )
+            #    fc        = self.fog_color
+            #    edge_color = (
+            #        int(color[0] * (1 - fog_t) + fc[0] * fog_t),
+            #        int(color[1] * (1 - fog_t) + fc[1] * fog_t),
+            #        int(color[2] * (1 - fog_t) + fc[2] * fog_t),
+            #    )
 
             pA = (int(sx_a), int(sy_a))
             pB = (int(sx_b), int(sy_b))
