@@ -132,20 +132,6 @@ class WireframeRenderer:
             sx_a, sy_a = ndc_to_screen(ndc_a, w, h)
             sx_b, sy_b = ndc_to_screen(ndc_b, w, h)
             edge_color = color
-            
-            # Fog tint
-            #if self.fog_color is not None:
-            #    mid_z     = (ndc_a[2] + ndc_b[2]) * 0.5
-            #    fog_t     = np.clip(
-            #        (mid_z - self.fog_near) / max(self.fog_far - self.fog_near, 1e-6),
-            #        0.0, 1.0,
-            #    )
-            #    fc        = self.fog_color
-            #    edge_color = (
-            #        int(color[0] * (1 - fog_t) + fc[0] * fog_t),
-            #        int(color[1] * (1 - fog_t) + fc[1] * fog_t),
-            #        int(color[2] * (1 - fog_t) + fc[2] * fog_t),
-            #    )
 
             pA = (int(sx_a), int(sy_a))
             pB = (int(sx_b), int(sy_b))

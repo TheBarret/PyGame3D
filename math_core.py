@@ -59,7 +59,6 @@ def euler_to_quaternion(pitch, yaw, roll):
     return np.array([cr*cp*cy+sr*sp*sy, sr*cp*cy-cr*sp*sy,
                      cr*sp*cy+sr*cp*sy, cr*cp*sy-sr*sp*cy], dtype=np.float32)
 
-
 def quaternion_from_axis_angle(axis, angle_rad):
     axis = np.asarray(axis, dtype=np.float32)
     n = np.linalg.norm(axis)
@@ -67,12 +66,10 @@ def quaternion_from_axis_angle(axis, angle_rad):
     axis /= n; h = angle_rad*0.5
     return np.array([np.cos(h), axis[0]*np.sin(h), axis[1]*np.sin(h), axis[2]*np.sin(h)], dtype=np.float32)
 
-
 def quaternion_multiply(q1, q2):
     w1,x1,y1,z1=q1; w2,x2,y2,z2=q2
     return np.array([w1*w2-x1*x2-y1*y2-z1*z2, w1*x2+x1*w2+y1*z2-z1*y2,
                      w1*y2-x1*z2+y1*w2+z1*x2, w1*z2+x1*y2-y1*x2+z1*w2], dtype=np.float32)
-
 
 def quaternion_rotate_vector(q, v):
     w,x,y,z=q; uv=np.cross([x,y,z],v); uuv=np.cross([x,y,z],uv)

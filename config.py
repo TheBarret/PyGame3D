@@ -1,16 +1,3 @@
-"""
-config.py — Single source of truth for all application constants.
-
-Every magic number that was previously scattered across main() lives here.
-Change one value, it propagates everywhere automatically.
-
-Usage
------
-    from config import AppConfig          # use defaults
-    cfg = AppConfig(window_width=1920)    # override one field
-    scene = SceneFactory.create(cfg)
-"""
-
 from __future__ import annotations
 from dataclasses import dataclass, field
 
@@ -34,14 +21,14 @@ class AppConfig:
     camera_target:  tuple = (0.0, 0.0,   0.0)
 
     # ── Renderer ────────────────────────────────────────────────────
-    renderer_antialiased: bool  = False
+    renderer_antialiased: bool  = True
     renderer_depth_sort:  bool  = True
 
     # ── Scene ───────────────────────────────────────────────────────
-    scene_background: tuple = (0, 8, 16)
+    scene_background: tuple = (1, 1, 1)
 
     # ── Input ───────────────────────────────────────────────────────
-    input_orbit_sensitivity:  float = 0.35   # degrees per pixel
+    input_orbit_sensitivity:  float = 0.15   # degrees per pixel
     input_pan_sensitivity:    float = 0.02   # world-units per pixel
     input_dolly_sensitivity:  float = 0.05
     input_zoom_sensitivity:   float = 0.5
@@ -56,6 +43,3 @@ class AppConfig:
 
     # ── Picking ─────────────────────────────────────────────────────
     pick_max_distance: float = 0.15       # world-space threshold
-
-    # ── Demo animation ──────────────────────────────────────────────
-    cube_spin_speed: float = 45.0         # degrees per second

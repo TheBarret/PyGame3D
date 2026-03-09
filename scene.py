@@ -44,7 +44,7 @@ from typing import Optional, TYPE_CHECKING
 import numpy as np
 
 from camera import Camera
-from wireframe_object import WireframeObject
+from primitive import WireframeObject
 
 
 if TYPE_CHECKING:

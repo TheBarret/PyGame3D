@@ -5,7 +5,7 @@ import random
 from scene              import Scene
 from camera             import Camera
 from renderer           import WireframeRenderer
-from wireframe_object   import WireframeObject
+from primitive          import WireframeObject
 from input_handler      import CameraInputHandler
 from config             import AppConfig
 from factory            import SceneFactory
@@ -15,21 +15,35 @@ from factory            import SceneFactory
 # ---------------------------------------------------------------------------
 
 def create_scene(bundle) -> None:
-    cube = WireframeObject.from_box(2, 2, 2, name="Cube")
-    cube.color = (80, 200, 255)
-    cube.transform.position = (0, 1, 0)
+    c1 = WireframeObject.from_box(1, 1, 1, name="C1")
+    c1.color = (90, 90, 90)
+    c1.transform.position = (0, 0, 0)
 
-    #satellite = WireframeObject.from_sphere_approx(radius=0.4, lat_lines=6, lon_lines=8, name="Satellite")
-    #satellite.color = (255, 180, 80)
-    #satellite.set_parent(cube)
-    #satellite.transform.position = (2, 0, 0)
+    c2 = WireframeObject.from_sphere_approx(radius=0.5, lat_lines=2, lon_lines=3, name="C2")
+    c2.color = (255, 0, 0)
+    c2.transform.position = (0, 1, 0)
+    c2.set_parent(c1)
 
+    c3 = WireframeObject.from_sphere_approx(radius=0.5, lat_lines=3, lon_lines=3, name="C3")
+    c3.color = (0, 255, 0)
+    c3.transform.position = (0, 2, 0)
+    c3.set_parent(c1)
+    
+    c4 = WireframeObject.from_sphere_approx(radius=0.5, lat_lines=4, lon_lines=3, name="C4")
+    c4.color = (0, 0, 255)
+    c4.transform.position = (0, 3, 0)
+    c4.set_parent(c1)
+    
+    c5 = WireframeObject.from_sphere_approx(radius=0.5, lat_lines=6, lon_lines=3, name="C5")
+    c5.color = (255, 255, 255)
+    c5.transform.position = (0, 4, 0)
+    c5.set_parent(c1)
+    
     bundle.scene.add(
-        create_grid(size=20, divisions=20, color=(40, 40, 60)),
-        create_anchor(length=3, color=(255, 80, 80)),
-        cube
+        create_grid(size=10, divisions=10, color=(40, 40, 60)),
+        create_anchor(length=4, color=(255, 80, 80),parent=c1),
+        c1, c2, c3, c4, c5
         )
-
 
 def create_grid(size, divisions, color):
     obj = WireframeObject.from_grid(size=size, divisions=divisions, name="Grid")
@@ -37,11 +51,11 @@ def create_grid(size, divisions, color):
     obj.pickable = False
     return obj
 
-
-def create_anchor(length, color):
+def create_anchor(length, color, parent):
     obj = WireframeObject.from_axes(length=length, name="WorldAxes")
     obj.color    = color
     obj.pickable = False
+    obj.set_parent(parent)
     return obj
 
 # ---------------------------------------------------------------------------
@@ -79,8 +93,9 @@ def main() -> None:
     create_scene(bundle)
 
     # Runtime state
-    cube_angle  = 0.0
+    _angle  = 0.0
     running     = True
+    base = bundle.scene.get("C1")
 
     while running:
         dt = bundle.clock.tick(cfg.target_fps) / 1000.0
@@ -111,7 +126,7 @@ def main() -> None:
                         *event.pos, w, h,
                         max_distance=cfg.pick_max_distance,
                     )
-                    print(f"Picked: {result.object.name}" if result else "Picked: nothing")
+                    print(f"Selected: {result.object.name}" if result else "Selected: nothing")
 
             elif event.type == pygame.MOUSEBUTTONUP:
                 bundle.handler.handle_event(event)
@@ -128,13 +143,14 @@ def main() -> None:
         # ── 2. Update ────────────────────────────────────────────────
         bundle.handler.update(bundle.camera, dt)
 
-        cube = bundle.scene.get("Cube")
-        if cube:
-            cube_angle += cfg.cube_spin_speed * dt
-            cube.transform.set_euler_degrees(cube_angle, cube_angle, -cube_angle)
+        
+        if base:
+            _angle += 30 * dt
+            base.transform.set_euler_degrees(_angle, _angle, -_angle)
 
         # ── 3. Render ────────────────────────────────────────────────
         bundle.scene.render(bundle.screen)
+        
         draw_hud(bundle)
         pygame.display.flip()
 

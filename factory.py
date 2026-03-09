@@ -1,35 +1,3 @@
-"""
-Constructs and wires all engine objects from an AppConfig.
-
-The factory has one job: read config, build objects, return a ready-to-use
-bundle.  No game logic, no event handling, no animation — just construction.
-
-Usage
------
-    from config       import AppConfig
-    from scene_factory import SceneFactory
-
-    cfg     = AppConfig()
-    bundle  = SceneFactory.create(cfg)
-
-    # Everything you need is on the bundle:
-    bundle.scene      # pygame3d Scene
-    bundle.camera     # Camera  (also reachable as bundle.scene.camera)
-    bundle.renderer   # WireframeRenderer
-    bundle.handler    # CameraInputHandler
-
-    # Add your own objects before the loop:
-    bundle.scene.add(my_object)
-
-    # Or use the fluent builder if you prefer:
-    bundle = (
-        SceneFactory.builder(cfg)
-            .add_grid(size=20, divisions=20, color=(40, 40, 60))
-            .add_object(my_cube)
-            .build()
-    )
-"""
-
 from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
@@ -40,7 +8,7 @@ from config import AppConfig
 from scene import Scene
 from camera import Camera
 from renderer import WireframeRenderer
-from wireframe_object import WireframeObject
+from primitive import WireframeObject
 from input_handler import CameraInputHandler
 
 
