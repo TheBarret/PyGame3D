@@ -31,4 +31,9 @@ This multi model approach combined Qwen's mathematical depth with Claude's archi
 - Object picking via ray casting
 - Reasonable performance for thousands of edges
 
+# Demo
+
+
+![pygame3d](https://github.com/user-attachments/assets/4c095932-25a3-45d6-b89e-4c41c9e7c4f0)
+
 <img width="720" src="https://github.com/user-attachments/assets/b3f867a2-e0ab-4786-81a2-22d2f8489c3a" />
