@@ -2,7 +2,10 @@ from __future__ import annotations
 import numpy as np
 
 '''
-Obsolete Strategies
+Math related Helpers and solvers
+
+
+* Obsolete Strategies *
 
 IDENTITY = np.eye(4, dtype=np.float32)
 ZERO_4X4 = np.zeros((4, 4), dtype=np.float32)
@@ -41,8 +44,12 @@ def view_matrix_from_transform(position, quaternion):
     return view
 '''
 
-# Optimized Strategies
 
+"""
+    Creates a 4x4 TRS (Translation-Rotation-Scale) matrix from components.
+    Used for transforming objects in world space (model matrix).
+    (Optimized version)
+"""
 def trs_matrix(translation, quaternion, scale):
     w, x, y, z = quaternion
     xx, yy, zz = x*x, y*y, z*z
@@ -70,6 +77,11 @@ def trs_matrix(translation, quaternion, scale):
     
     return s @ r @ t
 
+"""
+    Creates a view matrix from camera position and rotation.
+    Transforms world space to view space (camera space).
+    (Optimized version)
+"""
 def view_matrix_from_transform(position, quaternion):
     w, x, y, z = quaternion
     xx, yy, zz = x*x, y*y, z*z
@@ -92,6 +104,11 @@ def view_matrix_from_transform(position, quaternion):
     view[3, :3] = trans_inv
     view[3, 3] = 1.0
     return view
+
+"""
+    Converts Euler angles (in radians) to a quaternion.
+    Order: pitch (X), yaw (Y), roll (Z).
+"""
 def euler_to_quaternion(pitch, yaw, roll):
     cy,sy = np.cos(yaw*0.5),np.sin(yaw*0.5)
     cp,sp = np.cos(pitch*0.5),np.sin(pitch*0.5)
@@ -99,6 +116,9 @@ def euler_to_quaternion(pitch, yaw, roll):
     return np.array([cr*cp*cy+sr*sp*sy, sr*cp*cy-cr*sp*sy,
                      cr*sp*cy+sr*cp*sy, cr*cp*sy-sr*sp*cy], dtype=np.float32)
 
+"""
+    Creates a quaternion representing rotation around an axis by given angle.
+"""
 def quaternion_from_axis_angle(axis, angle_rad):
     axis = np.asarray(axis, dtype=np.float32)
     n = np.linalg.norm(axis)
@@ -106,15 +126,24 @@ def quaternion_from_axis_angle(axis, angle_rad):
     axis /= n; h = angle_rad*0.5
     return np.array([np.cos(h), axis[0]*np.sin(h), axis[1]*np.sin(h), axis[2]*np.sin(h)], dtype=np.float32)
 
+"""
+    Multiplies two quaternions (q1 * q2). Order matters for rotation composition.
+"""
 def quaternion_multiply(q1, q2):
     w1,x1,y1,z1=q1; w2,x2,y2,z2=q2
     return np.array([w1*w2-x1*x2-y1*y2-z1*z2, w1*x2+x1*w2+y1*z2-z1*y2,
                      w1*y2-x1*z2+y1*w2+z1*x2, w1*z2+x1*y2-y1*x2+z1*w2], dtype=np.float32)
 
+"""
+    Rotates a 3D vector v by quaternion q using efficient vector method.
+"""
 def quaternion_rotate_vector(q, v):
     w,x,y,z=q; uv=np.cross([x,y,z],v); uuv=np.cross([x,y,z],uv)
     return v + 2*(w*uv+uuv)
 
+"""
+    Creates a quaternion that rotates objects to look from eye to target.
+"""
 def look_at_quaternion(eye, target, up):
     fwd=(np.asarray(target,np.float32)-np.asarray(eye,np.float32))
     fwd/=np.linalg.norm(fwd)
@@ -137,7 +166,10 @@ def look_at_quaternion(eye, target, up):
         w=(mat[1,0]-mat[0,1])/s; x=(mat[0,2]+mat[2,0])/s; y=(mat[1,2]+mat[2,1])/s; z=0.25*s
     q=np.array([w,x,y,z],dtype=np.float32); return q/np.linalg.norm(q)
 
-
+"""
+    Creates a perspective projection matrix.
+    Maps view space to clip space with given field of view and clipping planes.
+"""
 def perspective_matrix(fov_y_rad, aspect, near, far):
     # Row-major (v @ M): w_clip = -z_view, encoded at M[2,3]. Constant at M[3,2].
     f=np.float32(1/np.tan(fov_y_rad*0.5))
@@ -148,7 +180,10 @@ def perspective_matrix(fov_y_rad, aspect, near, far):
     m[3,2]=(far*near)/(near-far)     # constant offset   (was [2,3]: col-major mistake)
     return m
 
-
+"""
+    Clips a line segment against the homogeneous clip space (-w <= x,y,z <= w).
+    Returns clipped endpoints if visible, None if completely clipped.
+"""
 def clip_edge_homogeneous(a, b):
     t0,t1=0.0,1.0; delta=b-a
     planes=[
@@ -172,7 +207,10 @@ def clip_edge_homogeneous(a, b):
                 if r<t1: t1=r
     return None if t0>t1 else (a+t0*delta, a+t1*delta)
 
-
+"""
+    Extracts 6 frustum planes (left, right, bottom, top, near, far) from view-projection matrix.
+    Used for frustum culling.
+"""
 def extract_frustum_planes(vp):
     # Row-major VP: v_clip = v @ VP, so clip components come from VP columns.
     # Gribb-Hartmann for row-major: use COLUMNS of VP (not rows).
@@ -184,19 +222,27 @@ def extract_frustum_planes(vp):
         planes[i]=p/n if n>1e-8 else p
     return planes
 
-
+"""
+    Tests if a sphere intersects the view frustum.
+    Returns True if sphere is partially/fully visible.
+"""
 def sphere_in_frustum(planes, centre, radius):
     c=np.asarray(centre,dtype=np.float32)
     for A,B,C,D in planes:
         if A*c[0]+B*c[1]+C*c[2]+D < -radius: return False
     return True
 
-
+"""
+    Converts normalized device coordinates (NDC) [-1,1] to screen pixel coordinates.
+"""
 def ndc_to_screen(ndc, screen_width, screen_height):
     x=np.clip(ndc[0],-1,1); y=np.clip(ndc[1],-1,1)
     return float((x+1)*0.5*screen_width), float((1-y)*0.5*screen_height)
 
-
+"""
+    Generates a world-space ray from screen coordinates.
+    Returns ray origin (camera position) and normalized direction.
+"""
 def unproject_ray(screen_x, screen_y, screen_w, screen_h, view_matrix, proj_matrix):
     ndc_x=(2.0*screen_x)/screen_w-1.0; ndc_y=1.0-(2.0*screen_y)/screen_h
     # Row-major: v_clip = v @ VP, so unproject via inv_vp @ clip_col or clip_row @ inv_vp
@@ -211,13 +257,18 @@ def unproject_ray(screen_x, screen_y, screen_w, screen_h, view_matrix, proj_matr
     origin=-trans@rot.T
     d=wp-origin; return origin.astype(np.float32), (d/np.linalg.norm(d)).astype(np.float32)
 
-
+"""
+    Tests if a ray intersects a sphere, used for picking/selection in 3D.
+"""
 def ray_sphere_intersect(origin, direction, centre, radius):
     L=centre-origin; tca=np.dot(L,direction)
     if tca<0: return False
     return np.dot(L,L)-tca*tca <= radius*radius
 
-
+"""
+    Finds closest distance between a ray and a line segment.
+    Returns (distance, ray_param) where ray_param is distance along ray to closest point.
+"""
 def ray_segment_distance(ray_origin, ray_dir, seg_a, seg_b):
     u=seg_b-seg_a; v=ray_dir; w=ray_origin-seg_a
     a=np.dot(v,v); b=np.dot(v,u); c=np.dot(u,u); d=np.dot(v,w); e=np.dot(u,w)
