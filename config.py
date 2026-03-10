@@ -30,7 +30,6 @@ class AppConfig:
     # ── Input ───────────────────────────────────────────────────────
     input_orbit_sensitivity:  float = 0.15   # degrees per pixel
     input_pan_sensitivity:    float = 0.02   # world-units per pixel
-    input_dolly_sensitivity:  float = 0.05
     input_zoom_sensitivity:   float = 0.5
     input_smoothing:          float = 0.18   # 0=instant  ~0.2=floaty  ~0.4=heavy
 

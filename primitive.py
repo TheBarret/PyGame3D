@@ -267,7 +267,7 @@ class WireframeObject:
 
     def __repr__(self) -> str:
         return (
-            f"WireframeObject(name={self.name!r}, "
+            f"Object(name={self.name!r}, "
             f"verts={self.vertex_count}, edges={self.edge_count}, "
             f"visible={self.visible})"
         )

@@ -11,10 +11,7 @@ from renderer import WireframeRenderer
 from primitive import WireframeObject
 from input_handler import CameraInputHandler
 
-
-# ---------------------------------------------------------------------------
-# AppBundle — the assembled result
-# ---------------------------------------------------------------------------
+# App Bundle
 
 @dataclass
 class AppBundle:
@@ -31,7 +28,7 @@ class AppBundle:
     clock:    pygame.time.Clock
     font:     pygame.font.Font
 
-    # Convenience passthrough so callers don't need to import Camera
+    # callers don't need to import Camera
     @property
     def cam(self) -> Camera:
         return self.camera
@@ -48,9 +45,7 @@ class AppBundle:
         self.scene.on_resize(width, height)
 
 
-# ---------------------------------------------------------------------------
-# SceneFactory
-# ---------------------------------------------------------------------------
+# Scene Factory
 
 class SceneFactory:
     """
@@ -134,30 +129,14 @@ class SceneFactory:
         return CameraInputHandler(
             orbit_sensitivity  = cfg.input_orbit_sensitivity,
             pan_sensitivity    = cfg.input_pan_sensitivity,
-            dolly_sensitivity  = cfg.input_dolly_sensitivity,
             zoom_sensitivity   = cfg.input_zoom_sensitivity,
             smoothing          = cfg.input_smoothing,
         )
 
 
-# ---------------------------------------------------------------------------
-# SceneBuilder — fluent API for adding objects
-# ---------------------------------------------------------------------------
+# Scene Builder
 
 class SceneBuilder:
-    """
-    Fluent builder returned by SceneFactory.builder().
-
-    Example
-    -------
-        bundle = (
-            SceneFactory.builder(cfg)
-                .add_grid(size=20, divisions=20, color=(40,40,60), pickable=False)
-                .add_box(2, 2, 2, name="Cube", color=(80,200,255), position=(0,1,0))
-                .build()
-        )
-    """
-
     def __init__(self, bundle: AppBundle) -> None:
         self._bundle = bundle
 

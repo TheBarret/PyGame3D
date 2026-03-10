@@ -1,8 +1,9 @@
 from __future__ import annotations
 import numpy as np
 
-
 '''
+Obsolete Strategies
+
 IDENTITY = np.eye(4, dtype=np.float32)
 ZERO_4X4 = np.zeros((4, 4), dtype=np.float32)
 
@@ -24,15 +25,32 @@ def trs_matrix(translation, quaternion, scale):
     mat_t = np.identity(4, dtype=np.float32)
     mat_t[3,0]=translation[0]; mat_t[3,1]=translation[1]; mat_t[3,2]=translation[2]
     return mat_s @ mat_r @ mat_t
+
+def view_matrix_from_transform(position, quaternion):
+    w,x,y,z=quaternion
+    xx,yy,zz=x*x,y*y,z*z; xy,xz,yz=x*y,x*z,y*z; wx,wy,wz=w*x,w*y,w*z
+    mat_r=np.zeros((4,4),dtype=np.float32)
+    mat_r[0,0]=1-2*(yy+zz); mat_r[0,1]=2*(xy+wz);  mat_r[0,2]=2*(xz-wy)
+    mat_r[1,0]=2*(xy-wz);   mat_r[1,1]=1-2*(xx+zz); mat_r[1,2]=2*(yz+wx)
+    mat_r[2,0]=2*(xz+wy);   mat_r[2,1]=2*(yz-wx);   mat_r[2,2]=1-2*(xx+yy)
+    mat_r[3,3]=1.0
+    rot_inv=mat_r[:3,:3].T
+    trans_inv=-np.asarray(position,dtype=np.float32) @ rot_inv
+    view=np.zeros((4,4),dtype=np.float32)
+    view[:3,:3]=rot_inv; view[3,:3]=trans_inv; view[3,3]=1.0
+    return view
 '''
-# Optimized
+
+# Optimized Strategies
+
 def trs_matrix(translation, quaternion, scale):
     w, x, y, z = quaternion
     xx, yy, zz = x*x, y*y, z*z
     xy, xz, yz = x*y, x*z, y*z
     wx, wy, wz = w*x, w*y, w*z
     
-    # Build rotation matrix directly (no temporary Quaternion object)
+    # Build rotation matrix directly
+    # no temporary Quaternion object
     r = np.eye(4, dtype=np.float32)
     r[:3, :3] = np.array([
         [1-2*(yy+zz), 2*(xy+wz),  2*(xz-wy)],
@@ -51,47 +69,6 @@ def trs_matrix(translation, quaternion, scale):
     t[3, :3] = translation
     
     return s @ r @ t
-
-def euler_to_quaternion(pitch, yaw, roll):
-    cy,sy = np.cos(yaw*0.5),np.sin(yaw*0.5)
-    cp,sp = np.cos(pitch*0.5),np.sin(pitch*0.5)
-    cr,sr = np.cos(roll*0.5),np.sin(roll*0.5)
-    return np.array([cr*cp*cy+sr*sp*sy, sr*cp*cy-cr*sp*sy,
-                     cr*sp*cy+sr*cp*sy, cr*cp*sy-sr*sp*cy], dtype=np.float32)
-
-def quaternion_from_axis_angle(axis, angle_rad):
-    axis = np.asarray(axis, dtype=np.float32)
-    n = np.linalg.norm(axis)
-    if n < 1e-8: return np.array([1,0,0,0], dtype=np.float32)
-    axis /= n; h = angle_rad*0.5
-    return np.array([np.cos(h), axis[0]*np.sin(h), axis[1]*np.sin(h), axis[2]*np.sin(h)], dtype=np.float32)
-
-def quaternion_multiply(q1, q2):
-    w1,x1,y1,z1=q1; w2,x2,y2,z2=q2
-    return np.array([w1*w2-x1*x2-y1*y2-z1*z2, w1*x2+x1*w2+y1*z2-z1*y2,
-                     w1*y2-x1*z2+y1*w2+z1*x2, w1*z2+x1*y2-y1*x2+z1*w2], dtype=np.float32)
-
-def quaternion_rotate_vector(q, v):
-    w,x,y,z=q; uv=np.cross([x,y,z],v); uuv=np.cross([x,y,z],uv)
-    return v + 2*(w*uv+uuv)
-
-'''
-def view_matrix_from_transform(position, quaternion):
-    w,x,y,z=quaternion
-    xx,yy,zz=x*x,y*y,z*z; xy,xz,yz=x*y,x*z,y*z; wx,wy,wz=w*x,w*y,w*z
-    mat_r=np.zeros((4,4),dtype=np.float32)
-    mat_r[0,0]=1-2*(yy+zz); mat_r[0,1]=2*(xy+wz);  mat_r[0,2]=2*(xz-wy)
-    mat_r[1,0]=2*(xy-wz);   mat_r[1,1]=1-2*(xx+zz); mat_r[1,2]=2*(yz+wx)
-    mat_r[2,0]=2*(xz+wy);   mat_r[2,1]=2*(yz-wx);   mat_r[2,2]=1-2*(xx+yy)
-    mat_r[3,3]=1.0
-    rot_inv=mat_r[:3,:3].T
-    trans_inv=-np.asarray(position,dtype=np.float32) @ rot_inv
-    view=np.zeros((4,4),dtype=np.float32)
-    view[:3,:3]=rot_inv; view[3,:3]=trans_inv; view[3,3]=1.0
-    return view
-'''
-
-# Optimized
 
 def view_matrix_from_transform(position, quaternion):
     w, x, y, z = quaternion
@@ -115,6 +92,28 @@ def view_matrix_from_transform(position, quaternion):
     view[3, :3] = trans_inv
     view[3, 3] = 1.0
     return view
+def euler_to_quaternion(pitch, yaw, roll):
+    cy,sy = np.cos(yaw*0.5),np.sin(yaw*0.5)
+    cp,sp = np.cos(pitch*0.5),np.sin(pitch*0.5)
+    cr,sr = np.cos(roll*0.5),np.sin(roll*0.5)
+    return np.array([cr*cp*cy+sr*sp*sy, sr*cp*cy-cr*sp*sy,
+                     cr*sp*cy+sr*cp*sy, cr*cp*sy-sr*sp*cy], dtype=np.float32)
+
+def quaternion_from_axis_angle(axis, angle_rad):
+    axis = np.asarray(axis, dtype=np.float32)
+    n = np.linalg.norm(axis)
+    if n < 1e-8: return np.array([1,0,0,0], dtype=np.float32)
+    axis /= n; h = angle_rad*0.5
+    return np.array([np.cos(h), axis[0]*np.sin(h), axis[1]*np.sin(h), axis[2]*np.sin(h)], dtype=np.float32)
+
+def quaternion_multiply(q1, q2):
+    w1,x1,y1,z1=q1; w2,x2,y2,z2=q2
+    return np.array([w1*w2-x1*x2-y1*y2-z1*z2, w1*x2+x1*w2+y1*z2-z1*y2,
+                     w1*y2-x1*z2+y1*w2+z1*x2, w1*z2+x1*y2-y1*x2+z1*w2], dtype=np.float32)
+
+def quaternion_rotate_vector(q, v):
+    w,x,y,z=q; uv=np.cross([x,y,z],v); uuv=np.cross([x,y,z],uv)
+    return v + 2*(w*uv+uuv)
 
 def look_at_quaternion(eye, target, up):
     fwd=(np.asarray(target,np.float32)-np.asarray(eye,np.float32))

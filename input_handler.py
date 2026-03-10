@@ -1,8 +1,6 @@
 """
-input_handler.py — Camera input handler for pygame3d.
+Input Manager
 
-Key fixes over the original:
-─────────────────────────────
 1. Delta is now per-frame (current_pos - last_pos), NOT total drag from mouse-down.
    This is why sensitivity=0.0 previously had no effect — the accumulated pixel
    distance was being used directly, bypassing the multiplier entirely.
@@ -33,38 +31,35 @@ class InputMode(Enum):
     PAN_X         = auto()
     PAN_Y         = auto()
     PAN_Z         = auto()
-    DOLLY         = auto()
     TRUCK         = auto()
     PEDESTAL      = auto()
 
 
 class CameraInputHandler:
     """
-    Frame-delta camera input with exponential smoothing.
+    Frame-delta camera input with smoothing controls.
 
     Sensitivity guide
     -----------------
-    orbit_sensitivity  : degrees of rotation per pixel dragged  (try 0.25–0.5)
-    pan_sensitivity    : world-units of translation per pixel   (try 0.01–0.03)
-    zoom_sensitivity   : world-units per scroll tick            (try 0.3–1.0)
+    orbit_sensitivity  : degrees of rotation per pixel dragged
+    pan_sensitivity    : world-units of translation per pixel
+    zoom_sensitivity   : world-units per scroll tick
     smoothing          : 0.0 = instant (no smoothing), 1.0 = never moves.
-                         0.15–0.25 gives a nice "floating" feel.
     """
 
     def __init__(
         self,
         orbit_sensitivity:  float = 0.3,
         pan_sensitivity:    float = 0.02,
-        dolly_sensitivity:  float = 0.05,
         zoom_sensitivity:   float = 0.5,
-        smoothing:          float = 0.18,      # exponential lerp factor (0=instant)
+        # exponential lerp factor (0=instant)
+        smoothing:          float = 0.18,
         axis_lock_threshold: float = 0.75,
         invert_pitch: bool = False,
         invert_pan_y: bool = False,
     ):
         self.orbit_sensitivity   = orbit_sensitivity
         self.pan_sensitivity     = pan_sensitivity
-        self.dolly_sensitivity   = dolly_sensitivity
         self.zoom_sensitivity    = zoom_sensitivity
         self.smoothing           = smoothing
         self.axis_lock_threshold = axis_lock_threshold
@@ -194,11 +189,6 @@ class CameraInputHandler:
                 ax = np.array(world_axis, dtype=np.float32)
                 camera.position = camera.position + ax * amount
 
-        # --- Dolly ---
-        zoom = smooth('zoom')
-        if abs(zoom) > 1e-5:
-            camera.zoom(zoom)
-
         # Clear targets each frame — they'll be re-set by motion events
         self._target.clear()
 
@@ -210,8 +200,7 @@ class CameraInputHandler:
         MAP = {
             pygame.K_LSHIFT: 'shift', pygame.K_RSHIFT: 'shift',
             pygame.K_LCTRL:  'ctrl',  pygame.K_RCTRL:  'ctrl',
-            pygame.K_LALT:   'alt',   pygame.K_RALT:   'alt',
-            pygame.K_SPACE:  'space',
+            pygame.K_LALT:   'alt',   pygame.K_RALT:   'alt'
         }
         if key in MAP:
             mod = MAP[key]
@@ -223,7 +212,7 @@ class CameraInputHandler:
         self._world_y_orbit  = False
         self._auto_orbit_axis = False
 
-        if event.button == 1:   # Left — orbit
+        if event.button == 1:   # Left (orbit)
             if 'shift' in mods and 'ctrl' in mods:
                 self.current_mode = InputMode.ORBIT_YAW
                 self._world_y_orbit = True
@@ -237,15 +226,13 @@ class CameraInputHandler:
             else:
                 self.current_mode = InputMode.ORBIT_FREE
 
-        elif event.button == 3:  # Right — pan / dolly
+        elif event.button == 3:  # Right (panning)
             if 'shift' in mods:
                 self.current_mode = InputMode.PAN_X
             elif 'ctrl' in mods:
                 self.current_mode = InputMode.PAN_Y
             elif 'alt' in mods:
                 self.current_mode = InputMode.PAN_Z
-            elif 'space' in mods:
-                self.current_mode = InputMode.DOLLY
             else:
                 self.current_mode = InputMode.PAN_FREE
 
@@ -307,12 +294,3 @@ class CameraInputHandler:
 
         elif mode == InputMode.PAN_Z:
             self._target['pan_z'] = dy * self.pan_sensitivity
-
-        # ── DOLLY / TRUCK ────────────────────────────────────────────
-        elif mode == InputMode.DOLLY:
-            if abs(dx) > abs(dy) * self.axis_lock_threshold:
-                # Horizontal → truck (world X)
-                self._target['pan_x'] = -dx * self.dolly_sensitivity
-            else:
-                # Vertical → dolly (zoom along forward)
-                self._target['zoom'] = -dy * self.dolly_sensitivity

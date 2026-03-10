@@ -1,5 +1,5 @@
 """
-WireframeRenderer — per-object draw pipeline.
+Renderer — per-object draw pipeline.
 
 Responsibilities (in order)
 ----------------------------
@@ -13,16 +13,6 @@ The renderer is stateless with respect to scene data; it only stores
 screen-size and rendering preferences so the Scene can call draw_object()
 repeatedly without re-injecting configuration every call.
 
-Depth-aware drawing (optional)
---------------------------------
-When depth_sort=True the renderer sorts edges by their midpoint clip-Z
-and draws far-to-near, giving a painter's-algorithm approximation for
-overlapping wireframes.  This is cheap (no true depth buffer).
-
-Fog (optional)
---------------
-When fog_color and fog_range are set, edge colour is linearly interpolated
-toward fog_color based on the clip-space depth of the edge midpoint.
 """
 
 from __future__ import annotations
